@@ -1,0 +1,27 @@
+﻿<?php
+require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../includes/auth.php";
+header("Content-Type: application/json");
+if (empty($_SESSION["user_id"])) { http_response_code(401); echo json_encode(["success"=>false,"error"=>"Unauthorized"]); exit; }
+if (!hasRole(["admin"])) { http_response_code(403); echo json_encode(["success"=>false,"error"=>"Forbidden"]); exit; }
+validateCsrfRequest();
+$staffId = (int)($_POST["staff_id"] ?? 0);
+if ($staffId <= 0) { echo json_encode(["success"=>false,"error"=>"Invalid staff ID."]); exit; }
+try {
+    $pdo  = Database::getConnection();
+    $stmt = $pdo->prepare("SELECT profile_photo FROM staff_members WHERE id=?");
+    $stmt->execute([$staffId]);
+    $row  = $stmt->fetch();
+    if (!$row) { echo json_encode(["success"=>false,"error"=>"Staff not found."]); exit; }
+    if (!empty($row["profile_photo"])) {
+        $f = __DIR__ . "/../../assets/images/staff/" . basename($row["profile_photo"]);
+        if (file_exists($f)) @unlink($f);
+    }
+    $upd = $pdo->prepare("UPDATE staff_members SET profile_photo=NULL WHERE id=?");
+    $upd->execute([$staffId]);
+    echo json_encode(["success"=>true]);
+} catch (Exception $e) {
+    error_log("Remove photo: " . $e->getMessage());
+    echo json_encode(["success"=>false,"error"=>"Database error."]);
+}
+
