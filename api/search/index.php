@@ -13,6 +13,10 @@ if (empty($_SESSION['user_id'])) {
     jsonResponse(['status' => 'error', 'error' => 'Unauthorized'], 401);
 }
 
+if (!hasRole(['admin', 'accountant', 'registrar', 'staff'])) {
+    jsonResponse(['error' => 'Forbidden'], 403);
+}
+
 $query = trim($_GET['q'] ?? '');
 if (strlen($query) < 2) {
     jsonResponse(['status' => 'success', 'results' => [], 'data' => []]);
@@ -23,6 +27,7 @@ $searchTerm = "%{$query}%";
 $results = [];
 $base = strpos($_SERVER['REQUEST_URI'], '/islamia%20college') !== false ? '/islamia%20college' : '';
 
+if (hasRole(['admin', 'registrar', 'staff'])) {
 // 1. Search Students
 $stmt = $pdo->prepare("
     SELECT id, student_reg_no, full_name, father_name, contact_number 
@@ -41,6 +46,9 @@ while ($row = $stmt->fetch()) {
     ];
 }
 
+}
+
+if (hasRole(['admin'])) {
 // 2. Search Staff
 $stmt = $pdo->prepare("
     SELECT id, staff_code, full_name, designation 
@@ -59,6 +67,9 @@ while ($row = $stmt->fetch()) {
     ];
 }
 
+}
+
+if (hasRole(['admin', 'registrar', 'staff'])) {
 // 3. Search Courses
 $stmt = $pdo->prepare("
     SELECT id, course_code, course_name, category 
@@ -77,6 +88,9 @@ while ($row = $stmt->fetch()) {
     ];
 }
 
+}
+
+if (hasRole(['admin', 'registrar', 'staff'])) {
 // 4. Search Batches
 $stmt = $pdo->prepare("
     SELECT b.id, b.batch_code, b.batch_name, c.course_name 
@@ -96,6 +110,9 @@ while ($row = $stmt->fetch()) {
     ];
 }
 
+}
+
+if (hasRole(['admin', 'registrar', 'staff'])) {
 // 5. Search Board Roll Numbers
 $stmt = $pdo->prepare("
     SELECT b.id, b.board_roll_no, b.board_registration_no, b.trade_course_name, s.full_name, s.id as student_id
@@ -115,6 +132,9 @@ while ($row = $stmt->fetch()) {
     ];
 }
 
+}
+
+if (hasRole(['admin', 'accountant'])) {
 // 6. Search Capital Assets
 $stmt = $pdo->prepare("
     SELECT id, asset_name, specification 
@@ -133,6 +153,9 @@ while ($row = $stmt->fetch()) {
     ];
 }
 
+}
+
+if (hasRole(['admin', 'accountant', 'registrar', 'staff'])) {
 // 7. Search Fee Receipts
 $stmt = $pdo->prepare("
     SELECT f.id, f.receipt_no, f.amount_paid, s.full_name, s.id as student_id
@@ -151,6 +174,8 @@ while ($row = $stmt->fetch()) {
         'subtitle' => 'Paid by: ' . $row['full_name'],
         'url'      => "{$base}/modules/fees/receipt.php?id=" . (int)$row['id']
     ];
+}
+
 }
 
 jsonResponse(['status' => 'success', 'results' => $results, 'data' => $results]);

@@ -9,11 +9,19 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/validation.php';
 
+if (!empty($_SESSION['user_id']) && !empty($_SESSION['must_change_password'])) {
+    jsonResponse(['error' => 'Please change your initial password before continuing.'], 403);
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 // Ensure user is authenticated
 if (empty($_SESSION['user_id'])) {
     jsonResponse(['status' => 'error', 'error' => '401 Unauthorized'], 401);
+}
+
+if (!hasRole(['admin', 'registrar', 'staff'])) {
+    jsonResponse(['error' => 'Forbidden'], 403);
 }
 
 $pdo = Database::getConnection();
@@ -114,6 +122,8 @@ switch ($method) {
 
         $raw = file_get_contents('php://input');
         $input = json_decode($raw, true) ?? [];
+        $errors = Validator::validateStudent($input);
+        if ($errors) jsonResponse(['errors' => $errors], 400);
         $id = (int)($input['id'] ?? $_GET['id'] ?? 0);
         if ($id <= 0) {
             jsonResponse(['status' => 'error', 'message' => 'Valid Student ID required'], 400);
@@ -148,8 +158,11 @@ switch ($method) {
             jsonResponse(['status' => 'error', 'message' => 'Valid Student ID required'], 400);
         }
 
-        $stmt = $pdo->prepare("DELETE FROM students WHERE id = ?");
+        $stmt = $pdo->prepare("DELETE FROM students WHERE id = ? AND NOT EXISTS (SELECT 1 FROM enrollments WHERE student_id = students.id) AND NOT EXISTS (SELECT 1 FROM board_examinations WHERE student_id = students.id)");
         $stmt->execute([$id]);
+        if ($stmt->rowCount() === 0) {
+            jsonResponse(['error' => 'Student not found or has linked enrollment/exam records.'], 409);
+        }
         jsonResponse(['status' => 'success', 'message' => 'Student record deleted successfully']);
         break;
 

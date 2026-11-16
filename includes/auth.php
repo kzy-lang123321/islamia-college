@@ -126,12 +126,12 @@ function isLoginLockedOut(string $identifier, string $ip): bool {
         $stmt = $pdo->prepare("
             SELECT 
                 SUM(CASE WHEN identifier = ? THEN 1 ELSE 0 END) as user_fails,
-                COUNT(*) as ip_fails
+                SUM(CASE WHEN ip_address = ? THEN 1 ELSE 0 END) as ip_fails
             FROM login_attempts
             WHERE (identifier = ? OR ip_address = ?)
               AND attempted_at >= (NOW() - INTERVAL 5 MINUTE)
         ");
-        $stmt->execute([$identifier, $identifier, $ip]);
+        $stmt->execute([$identifier, $ip, $identifier, $ip]);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
         $userFails = (int)($res['user_fails'] ?? 0);
         $ipFails = (int)($res['ip_fails'] ?? 0);
@@ -200,17 +200,6 @@ function loginUser(string $identifier, string $password): array {
         if ($user && (int)$user['is_active'] === 1) {
             if (password_verify($password, $user['password_hash'])) {
                 $passwordValid = true;
-            } elseif (!empty($user['phone'])) {
-                // Fallback for default password: check normalized digits (with/without hyphens/spaces)
-                $cleanInput = preg_replace('/\D/', '', $password);
-                $cleanPhone = preg_replace('/\D/', '', $user['phone']);
-                if ($cleanInput !== '' && $cleanInput === $cleanPhone) {
-                    $passwordValid = true;
-                    // Update user password_hash with standard bcrypt of input
-                    $newHash = password_hash($password, PASSWORD_BCRYPT);
-                    $upStmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-                    $upStmt->execute([$newHash, $user['id']]);
-                }
             }
         }
 

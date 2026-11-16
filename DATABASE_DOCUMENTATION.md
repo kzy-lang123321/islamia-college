@@ -78,13 +78,25 @@ Ledger of student fee installments, receipts, and outstanding dues.
 * `enrollment_id`: INT NOT NULL (FK -> `enrollments.id`)
 * `semester`: TINYINT DEFAULT 1
 * `installment_no`: TINYINT DEFAULT 1
-* `amount_paid`: DECIMAL(10,2) NOT NULL DEFAULT 0.00
-* `due_amount`: DECIMAL(10,2) NOT NULL DEFAULT 0.00
-* `payment_date`: DATE NULL
-* `payment_mode`: ENUM('cash', 'bank', 'slip', 'other') NOT NULL DEFAULT 'cash'
+* `receipt_no`: VARCHAR(50) NOT NULL UNIQUE (Guaranteed unique receipt identifier)
 * `receipt_voucher_no`: VARCHAR(50) NULL
-* `received_by`: VARCHAR(100) NULL (e.g., 'FARAZ SEB', 'Irfan sir')
+* `amount_paid`: DECIMAL(10,2) NOT NULL DEFAULT 0.00
+* `due_amount`: DECIMAL(10,2) NOT NULL DEFAULT 0.00 (Remaining balance after payment)
+* `fine_amount`: DECIMAL(10,2) NOT NULL DEFAULT 0.00
+* `discount_amount`: DECIMAL(10,2) NOT NULL DEFAULT 0.00
+* `payment_date`: DATE NULL
+* `payment_method`: VARCHAR(50) DEFAULT 'cash' ('cash', 'bank', 'cheque', 'online', 'slip')
+* `payment_mode`: VARCHAR(50) DEFAULT 'cash'
+* `reference_no`: VARCHAR(100) NULL (Cheque # or Bank transfer ref)
+* `bank_name`: VARCHAR(100) NULL
+* `cheque_date`: DATE NULL
+* `received_by`: VARCHAR(100) NULL (Audited cashier / authenticated official)
 * `remarks`: VARCHAR(255) NULL
+* `is_cancelled`: TINYINT(1) DEFAULT 0 (Anti-silent-deletion: void status)
+* `cancellation_reason`: VARCHAR(255) NULL (Mandatory audit explanation)
+* `cancelled_by`: VARCHAR(100) NULL
+* `cancelled_at`: DATETIME NULL
+* `created_at`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
 ### 2.7 `board_examinations`
 Registration and performance tracking for Trade Testing Board (TTB) Peshawar.
@@ -197,3 +209,22 @@ c:\xampp\mysql\bin\mysql.exe -u root -p < "c:\xampp\htdocs\islamia college\datab
 * **Accountant**: `accountant`
 * **Registrar**: `registrar`
 * Note: Passwords are encrypted with bcrypt (`PASSWORD_BCRYPT`). Maintain credentials securely in accordance with institutional policy.
+
+
+## Security and schema upgrade (November 2026)
+
+For an existing installation, back up the database and run the following from the project directory after starting MySQL:
+
+```powershell
+& C:\xampp\php\php.exe database\upgrade.php
+```
+
+This CLI-only upgrade adds missing authentication, course, enrollment, and staff fields and protects financial history with restrictive foreign keys. It is safe to rerun and preserves existing rows. MySQL schema changes commit individually; rerun the command if an interrupted upgrade needs completion. DB_HOST, DB_PORT, DB_NAME, DB_USER, and DB_PASS environment variables override the defaults in config/database.php.
+
+The full database.sql, database/schema.sql, and database/import.sql files are for fresh installations: they drop existing application tables and must not be used to upgrade live college records.
+
+Payments marked cancelled remain available in the ledger but are excluded from dashboard/report collections and dues. Outstanding fees include fines and are calculated per enrollment so one student's credit does not reduce another student's dues. Linked payment and payroll records prevent deletion of their parent records.
+
+Temporary user credentials require a password change. Authentication verifies the stored password hash; a registered phone number is only an account identifier. Password reset links still require administrative dispatch from the server log.
+
+Verification uses tests/integration.php against a separate temporary MySQL instance on port 33317 and database islamia_college_check. It refuses the default college database. Temporary test files belong in .local-checks/ and are excluded from Git.

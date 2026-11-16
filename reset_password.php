@@ -54,15 +54,24 @@ if ($tokenValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action
         try {
             $pdo     = Database::getConnection();
             $newHash = password_hash($newPassword, PASSWORD_BCRYPT);
-            $upd = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+            $pdo->beginTransaction();
+            $claim = $pdo->prepare("UPDATE password_resets SET used = 1 WHERE token_hash = ? AND used = 0 AND expires_at > NOW()");
+            $claim->execute([hash('sha256', $token)]);
+            if ($claim->rowCount() !== 1) {
+                throw new RuntimeException('Reset token expired or already used.');
+            }
+            $upd = $pdo->prepare("UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ? AND is_active = 1");
             $upd->execute([$newHash, $userId]);
-            $tokenHash = hash('sha256', $token);
-            $del = $pdo->prepare("UPDATE password_resets SET used = 1 WHERE token_hash = ?");
-            $del->execute([$tokenHash]);
+            if ($upd->rowCount() !== 1) {
+                throw new RuntimeException('Account is unavailable.');
+            }
+            $pdo->prepare("UPDATE password_resets SET used = 1 WHERE user_id = ?")->execute([$userId]);
+            $pdo->commit();
             $success = true;
             $message = 'Your password has been reset successfully. You can now sign in.';
             $msgType = 'success';
         } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
             error_log('Password reset save error: ' . $e->getMessage());
             $message = 'Could not update your password. Please try again.';
         }

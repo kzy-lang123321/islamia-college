@@ -1,0 +1,6 @@
+# Keep database exports, internal scripts and local backups private.
+Options -Indexes
+RedirectMatch 403 "(?i)(^|/)(\.git|\.local-checks|config|includes|database|tests|pdf-tools)(/|$)"
+<FilesMatch "(?i)\.(sql|xlsx?|md|log|ini|env|bak|py|bat)$">
+    Require all denied
+</FilesMatch>

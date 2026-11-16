@@ -9,11 +9,34 @@ document.addEventListener('DOMContentLoaded', () => {
     initCollapsibleNav();
     initGlobalSearch();
     initUserDropdown();
+    initNotificationsDropdown();
+    initDropdowns();
     initTabs();
     initPasswordToggles();
     initFormDebounce();
     initBackspaceNavigation();
+    initHeaderScroll();
 });
+
+/**
+ * Dynamic Header Scroll Effect
+ */
+function initHeaderScroll() {
+    const header = document.querySelector('.app-header');
+    if (!header) return;
+    
+    const handleScroll = () => {
+        if (window.scrollY > 20) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Run once on load to set initial state
+    handleScroll();
+}
 
 /**
  * Mobile Sidebar Drawer Navigation
@@ -79,6 +102,25 @@ function initSidebar() {
         });
     }
 
+    const desktopSidebarToggle = document.getElementById('desktop-sidebar-toggle');
+    if (desktopSidebarToggle) {
+        desktopSidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDesktopCollapse();
+        });
+    }
+
+    if (sidebar) {
+        sidebar.addEventListener('click', (e) => {
+            // If on desktop and sidebar is collapsed, only toggle if clicking empty sidebar padding (not a link, button, or input)
+            if (window.innerWidth > 1024 && document.body.classList.contains('sidebar-collapsed')) {
+                if (!e.target.closest('a') && !e.target.closest('button') && !e.target.closest('input')) {
+                    toggleDesktopCollapse();
+                }
+            }
+        });
+    }
+
     if (closeBtn) {
         closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -103,7 +145,7 @@ function initSidebar() {
 
     // Close mobile drawer when clicking navigation links on mobile/tablet screens
     if (sidebar) {
-        sidebar.querySelectorAll('.nav-sublink, .nav-link').forEach(link => {
+        sidebar.querySelectorAll('.nav-sublink, .nav-link, .edu-nav-link, .edu-subflyout-link').forEach(link => {
             link.addEventListener('click', () => {
                 if (window.innerWidth <= 1024) {
                     closeMobileSidebar();
@@ -243,6 +285,15 @@ function initGlobalSearch() {
             resultsContainer.style.display = 'none';
         }
     });
+
+    // Ctrl+K / Cmd+K global shortcut to focus search
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+    });
 }
 
 function highlightItem(items, index) {
@@ -293,13 +344,23 @@ function escapeHtml(str) {
  */
 function initUserDropdown() {
     const containers = document.querySelectorAll('.user-profile-container');
+    const notifContainer = document.getElementById('notifications-container');
+    const notifToggle = document.getElementById('notifications-toggle');
+
     containers.forEach(container => {
         const toggle = container.querySelector('.user-profile-pill');
         if (!toggle) return;
 
         toggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            container.classList.toggle('open');
+            const willOpen = !container.classList.contains('open');
+            container.classList.toggle('open', willOpen);
+
+            // Close notifications dropdown if open
+            if (willOpen && notifContainer) {
+                notifContainer.classList.remove('open');
+                if (notifToggle) notifToggle.setAttribute('aria-expanded', 'false');
+            }
         });
     });
 
@@ -317,6 +378,157 @@ function initUserDropdown() {
         }
     });
 }
+
+/**
+ * Live Institutional Notifications Dropdown System
+ */
+function initNotificationsDropdown() {
+    const container = document.getElementById('notifications-container');
+    const toggleBtn = document.getElementById('notifications-toggle');
+    const userContainer = document.getElementById('user-profile-dropdown-wrap');
+
+    if (!container || !toggleBtn) return;
+
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = container.classList.toggle('open');
+        toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+        // Mutual exclusivity: Close user dropdown if open
+        if (isOpen && userContainer) {
+            userContainer.classList.remove('open');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+            container.classList.remove('open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && container.classList.contains('open')) {
+            container.classList.remove('open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
+/**
+ * Universal Action Dropdown System (.dropdown-container)
+ */
+function initDropdowns() {
+    document.querySelectorAll('.dropdown-container').forEach(container => {
+        const trigger = container.querySelector('.dropdown-trigger');
+        if (!trigger) return;
+
+        // Prevent duplicate listener binding
+        if (trigger.dataset.dropdownBound === '1') return;
+        trigger.dataset.dropdownBound = '1';
+
+        // Strip inline onclick attribute that calls toggleDropdown to prevent double-execution
+        const onclickAttr = trigger.getAttribute('onclick') || '';
+        if (onclickAttr.includes('toggleDropdown')) {
+            trigger.removeAttribute('onclick');
+        }
+
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.toggleDropdown(container, e);
+        });
+    });
+
+    if (!window._dropdownGlobalListenersBound) {
+        window._dropdownGlobalListenersBound = true;
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-container')) {
+                window.closeAllDropdowns();
+            }
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.closeAllDropdowns();
+            }
+        });
+    }
+}
+
+/**
+ * Universal Close All Dropdowns Helper
+ */
+window.closeAllDropdowns = function() {
+    document.querySelectorAll('.dropdown-container.open').forEach(container => {
+        container.classList.remove('open');
+        const trigger = container.querySelector('.dropdown-trigger');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+
+    document.querySelectorAll('.dropdown-open-parent').forEach(el => {
+        el.classList.remove('dropdown-open-parent');
+    });
+};
+
+/**
+ * Universal Global Dropdown Toggle Helper
+ */
+window.toggleDropdown = function(containerOrId, e) {
+    if (e) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    }
+    const container = typeof containerOrId === 'string' ? document.getElementById(containerOrId) : containerOrId;
+    if (!container) return;
+
+    const willOpen = !container.classList.contains('open');
+
+    // Close all other dropdowns
+    document.querySelectorAll('.dropdown-container.open').forEach(other => {
+        if (other !== container) {
+            other.classList.remove('open');
+            const otherTrig = other.querySelector('.dropdown-trigger');
+            if (otherTrig) otherTrig.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // Clean up old parents
+    document.querySelectorAll('.dropdown-open-parent').forEach(el => {
+        if (!container.contains(el) && !el.contains(container)) {
+            el.classList.remove('dropdown-open-parent');
+        }
+    });
+
+    if (willOpen) {
+        container.classList.add('open');
+    } else {
+        container.classList.remove('open');
+    }
+
+    const trigger = container.querySelector('.dropdown-trigger');
+    if (trigger) trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+
+    // Elevate ALL ancestor wrappers so the dropdown is NEVER hidden behind KPI cards/grids
+    let p = container.parentElement;
+    while (p && p !== document.body && p !== document.documentElement) {
+        if (p.classList.contains('dash-hero') || 
+            p.classList.contains('dash-hero-actions') || 
+            p.classList.contains('dash-hero-info') ||
+            p.classList.contains('page-header') || 
+            p.classList.contains('filter-bar') ||
+            p.classList.contains('app-header') ||
+            p.classList.contains('app-main')) {
+            p.classList.toggle('dropdown-open-parent', willOpen);
+        }
+        p = p.parentElement;
+    }
+};
+
 
 /**
  * Tab Switcher Controls
@@ -557,54 +769,30 @@ function initBackspaceNavigation() {
 }
 
 /**
- * Theme & Color Palette Management
+ * Institutional Theme Management (Strictly Logo Color Schema)
  */
 function initTheme() {
-    const savedTheme = localStorage.getItem('ict_theme') || 'light';
+    let savedTheme = localStorage.getItem('ict_theme') || 'light';
+    // Strictly enforce institutional scheme: only 'dark' or default 'light'
+    if (savedTheme !== 'dark') {
+        savedTheme = 'light';
+    }
     setTheme(savedTheme, false);
 }
 
 function setTheme(themeName, showNotification = true) {
-    if (!themeName) themeName = 'light';
-    document.documentElement.setAttribute('data-theme', themeName);
-    localStorage.setItem('ict_theme', themeName);
-
-    // Update active state in theme-picker cards if present on page
-    document.querySelectorAll('.theme-card-option').forEach(card => {
-        const t = card.getAttribute('data-theme-key');
-        card.classList.toggle('active', t === themeName);
-    });
-
-    // Update theme toggle buttons title and attributes
-    document.querySelectorAll('#sidebar-theme-toggle, .theme-toggle-btn').forEach(btn => {
-        const isDark = themeName === 'dark';
-        btn.setAttribute('title', isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme');
-        btn.setAttribute('aria-label', isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme');
-    });
+    const validTheme = (themeName === 'dark') ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', validTheme);
+    localStorage.setItem('ict_theme', validTheme);
 
     if (showNotification && typeof showToast === 'function') {
-        const themeLabels = {
-            'light': 'Suggested Light (Default)',
-            'clean-blue': 'Clean Blue',
-            'royal-blue': 'Royal Blue',
-            'teal': 'Teal Academic',
-            'purple': 'Purple Academic',
-            'navy-cyan': 'Navy + Cyan',
-            'slate-blue': 'Slate + Blue',
-            'green': 'Green Academic',
-            'warm': 'Warm Professional',
-            'dark': 'Classic Dark Navy'
-        };
-        showToast(`Theme applied: ${themeLabels[themeName] || themeName}`, 'info');
+        showToast(`Theme: ${validTheme === 'dark' ? 'Dark Mode' : 'Institutional Light'}`, 'info');
     }
 }
 
 function toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || 'light';
-    const next = current === 'dark' ? (localStorage.getItem('ict_light_theme_choice') || 'light') : 'dark';
-    if (current !== 'dark') {
-        localStorage.setItem('ict_light_theme_choice', current);
-    }
+    const next = current === 'dark' ? 'light' : 'dark';
     setTheme(next);
 }
 

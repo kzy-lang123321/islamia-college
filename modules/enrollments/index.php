@@ -85,8 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $id = (int)($_POST['id'] ?? 0);
             try {
-                $stmt = $pdo->prepare("DELETE FROM enrollments WHERE id = ?");
+                $stmt = $pdo->prepare("DELETE FROM enrollments WHERE id = ? AND NOT EXISTS (SELECT 1 FROM fee_transactions WHERE enrollment_id = enrollments.id)");
                 $stmt->execute([$id]);
+                if ($stmt->rowCount() === 0) {
+                    throw new PDOException("Enrollment has linked payments or no longer exists.");
+                }
                 $message = "Enrollment removed successfully.";
             } catch (PDOException $e) {
                 error_log("Delete enrollment error: " . $e->getMessage());

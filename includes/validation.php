@@ -20,10 +20,10 @@ class Validator {
 
     public static function validateFee(array $input): array {
         $errors = [];
-        if (empty($input['enrollment_id']) || !is_numeric($input['enrollment_id'])) {
+        if (empty($input['enrollment_id']) || !filter_var($input['enrollment_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
             $errors[] = "Valid enrollment_id is required.";
         }
-        if (!isset($input['amount_paid']) || !is_numeric($input['amount_paid']) || $input['amount_paid'] < 0) {
+        if (!isset($input['amount_paid']) || !is_numeric($input['amount_paid']) || $input['amount_paid'] <= 0) {
             $errors[] = "Valid positive amount_paid is required.";
         }
         return $errors;

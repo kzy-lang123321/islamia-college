@@ -11,6 +11,8 @@ USE `islamia_college_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `password_resets`;
+DROP TABLE IF EXISTS `login_attempts`;
 DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `loans_and_advances`;
 DROP TABLE IF EXISTS `asset_payment_installments`;
@@ -40,6 +42,7 @@ CREATE TABLE `departments` (
 
 
 CREATE TABLE `courses` (
+    `department_id` INT NULL,
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `course_code` VARCHAR(50) NOT NULL UNIQUE,
     `course_name` VARCHAR(150) NOT NULL,
@@ -62,7 +65,7 @@ CREATE TABLE `batches` (
     `end_date` DATE NULL,
     `status` ENUM('active', 'completed', 'upcoming') NOT NULL DEFAULT 'active',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_batch_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_batch_course` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE RESTRICT,
     INDEX `idx_batch_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -86,6 +89,10 @@ CREATE TABLE `students` (
 
 
 CREATE TABLE `enrollments` (
+    `course_id` INT NULL,
+    `academic_session` VARCHAR(100) NULL,
+    `class_level` VARCHAR(100) NULL,
+
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `student_id` INT NOT NULL,
     `batch_id` INT NOT NULL,
@@ -99,8 +106,8 @@ CREATE TABLE `enrollments` (
     `tuition_subjects` VARCHAR(200) NULL,
     `status` ENUM('active', 'completed', 'dropped') NOT NULL DEFAULT 'active',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_enroll_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_enroll_batch` FOREIGN KEY (`batch_id`) REFERENCES `batches` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_enroll_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE RESTRICT,
+    CONSTRAINT `fk_enroll_batch` FOREIGN KEY (`batch_id`) REFERENCES `batches` (`id`) ON DELETE RESTRICT,
     INDEX `idx_enroll_roll` (`roll_number`),
     INDEX `idx_enroll_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -111,16 +118,28 @@ CREATE TABLE `fee_transactions` (
     `enrollment_id` INT NOT NULL,
     `semester` TINYINT DEFAULT 1,
     `installment_no` TINYINT DEFAULT 1,
+    `receipt_no` VARCHAR(50) NULL,
+    `receipt_voucher_no` VARCHAR(50) NULL,
     `amount_paid` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `due_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `fine_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `discount_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `payment_date` DATE NULL,
-    `payment_mode` ENUM('cash', 'bank', 'slip', 'other') NOT NULL DEFAULT 'cash',
-    `receipt_voucher_no` VARCHAR(50) NULL,
+    `payment_method` VARCHAR(50) NOT NULL DEFAULT 'cash',
+    `payment_mode` VARCHAR(50) NOT NULL DEFAULT 'cash',
+    `reference_no` VARCHAR(100) NULL,
+    `bank_name` VARCHAR(100) NULL,
+    `cheque_date` DATE NULL,
     `received_by` VARCHAR(100) NULL,
     `remarks` VARCHAR(255) NULL,
+    `is_cancelled` TINYINT(1) NOT NULL DEFAULT 0,
+    `cancellation_reason` VARCHAR(255) NULL,
+    `cancelled_by` VARCHAR(100) NULL,
+    `cancelled_at` DATETIME NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_tx_enrollment` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollments` (`id`) ON DELETE CASCADE,
-    INDEX `idx_tx_payment_date` (`payment_date`)
+    CONSTRAINT `fk_tx_enrollment` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollments` (`id`) ON DELETE RESTRICT,
+    INDEX `idx_tx_payment_date` (`payment_date`),
+    INDEX `idx_fee_receipt_no` (`receipt_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -159,6 +178,10 @@ CREATE TABLE `academic_positions` (
 
 
 CREATE TABLE `staff_members` (
+    `profile_photo` VARCHAR(255) NULL,
+    `salary_type` VARCHAR(20) NOT NULL DEFAULT 'fixed',
+    `salary_percentage` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `staff_code` VARCHAR(50) NOT NULL UNIQUE,
     `full_name` VARCHAR(150) NOT NULL,
@@ -185,7 +208,7 @@ CREATE TABLE `staff_payroll` (
     `total_paid` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `dues` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_payroll_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff_members` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_payroll_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff_members` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -244,6 +267,16 @@ CREATE TABLE `loans_and_advances` (
 
 
 CREATE TABLE `users` (
+    `email` VARCHAR(100) NULL,
+    `phone` VARCHAR(30) NULL,
+    `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
+    `student_id` INT NULL,
+    `profile_photo` VARCHAR(255) NULL,
+    `privacy_hide_phone` TINYINT(1) NOT NULL DEFAULT 0,
+    `privacy_hide_email` TINYINT(1) NOT NULL DEFAULT 0,
+    `last_login_at` DATETIME NULL,
+    `last_login_ip` VARCHAR(45) NULL,
+
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `username` VARCHAR(50) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
@@ -254,6 +287,25 @@ CREATE TABLE `users` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+CREATE TABLE IF NOT EXISTS `login_attempts` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `identifier` VARCHAR(255) NOT NULL,
+    `ip_address` VARCHAR(45) NOT NULL,
+    `attempted_at` DATETIME NOT NULL,
+    INDEX `idx_login_identifier_time` (`identifier`, `attempted_at`),
+    INDEX `idx_login_ip_time` (`ip_address`, `attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `password_resets` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `token_hash` CHAR(64) NOT NULL UNIQUE,
+    `expires_at` DATETIME NOT NULL,
+    `used` TINYINT(1) NOT NULL DEFAULT 0,
+    INDEX `idx_reset_user` (`user_id`),
+    CONSTRAINT `fk_reset_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
 -- DATA INSERTION: LOOKUP / REFERENCE DATA

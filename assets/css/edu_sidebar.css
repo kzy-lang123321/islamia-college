@@ -1,0 +1,599 @@
+/* ==========================================================================
+   ISLAMIA COLLEGE OF TECHNOLOGY / EDU INSIGHT
+   PREMIUM DUAL-TRACK SIDEBAR STYLESHEET
+   Expanded: 272px (72px Orange Rail + 200px White Menu)
+   Collapsed: 72px (Icon Rail Mode)
+   ========================================================================== */
+
+:root {
+    --sidebar-width: 272px;
+    --sidebar-collapsed-width: 72px;
+    --sidebar-orange: #eb6226;
+    --sidebar-orange-dark: #d45119;
+    --sidebar-orange-hover: #ff7841;
+    --sidebar-orange-light: #fef0ea;
+}
+
+/* ==========================================================================
+   APP MAIN ADJUSTMENT TO ACCOMMODATE 272PX SIDEBAR
+   ========================================================================== */
+.app-main {
+    margin-left: 272px !important;
+    width: calc(100% - 272px) !important;
+    transition: margin-left 0.24s cubic-bezier(0.16, 1, 0.3, 1), width 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ==========================================================================
+   MAIN SIDEBAR CONTAINER
+   ========================================================================== */
+.app-sidebar.edu-sidebar {
+    width: 272px !important;
+    height: 100vh !important;
+    background: linear-gradient(to right, #eb6226 72px, #ffffff 72px) !important;
+    border-right: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    z-index: 100 !important;
+    transition: width 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s ease !important;
+    box-sizing: border-box !important;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.04) !important;
+    user-select: none;
+    overflow: visible !important;
+}
+
+/* Sidebar Top Header (72px) */
+.edu-sidebar-header {
+    height: 72px !important;
+    display: flex !important;
+    align-items: stretch !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    flex-shrink: 0 !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Top Left Logo Square (72px x 72px) */
+.edu-sidebar-logo-box {
+    width: 72px !important;
+    height: 72px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffffff !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+    flex-shrink: 0 !important;
+    text-decoration: none !important;
+    transition: background 0.18s ease !important;
+    box-sizing: border-box !important;
+}
+
+.edu-sidebar-logo-box:hover {
+    background: #f8fafc !important;
+}
+
+.edu-sidebar-logo-img {
+    width: 44px !important;
+    height: 44px !important;
+    object-fit: contain !important;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.edu-sidebar-logo-box:hover .edu-sidebar-logo-img {
+    transform: scale(1.06) !important;
+}
+
+/* Top Right Illustration Banner (200px x 72px) */
+.edu-sidebar-banner {
+    width: 200px !important;
+    height: 72px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    background: #fed7aa !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.edu-banner-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: right center !important;
+    opacity: 0.95 !important;
+}
+
+.edu-banner-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(90deg, rgba(254, 215, 170, 0.97) 0%, rgba(254, 215, 170, 0.82) 55%, rgba(254, 215, 170, 0.25) 100%) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 0 12px !important;
+    pointer-events: none !important;
+}
+
+.edu-banner-badge {
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(235, 98, 38, 0.9), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    line-height: 1.15 !important;
+}
+
+.edu-banner-sub {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    color: #c2410c !important;
+    letter-spacing: 0.02em !important;
+    margin-top: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Desktop Collapse/Expand Quick Toggle on Banner */
+.edu-sidebar-toggle-btn {
+    position: absolute !important;
+    right: 8px !important;
+    top: 8px !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(235, 98, 38, 0.25) !important;
+    color: #ea580c !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    z-index: 5 !important;
+    padding: 0 !important;
+}
+
+.edu-sidebar-toggle-btn:hover {
+    background: #eb6226 !important;
+    color: #ffffff !important;
+    border-color: #eb6226 !important;
+    transform: scale(1.08) !important;
+}
+
+.edu-sidebar-toggle-btn .collapse-icon-expand {
+    display: flex !important;
+}
+
+.edu-sidebar-toggle-btn .collapse-icon-collapsed {
+    display: none !important;
+}
+
+/* Mobile Close Button */
+.sidebar-close-btn {
+    display: none;
+    position: absolute !important;
+    right: 10px !important;
+    top: 10px !important;
+    background: rgba(239, 68, 68, 0.12) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    color: #ef4444 !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.18s ease !important;
+    z-index: 10 !important;
+}
+
+.sidebar-close-btn:hover {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   NAVIGATION BODY & ROWS
+   ========================================================================== */
+.edu-sidebar-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.edu-sidebar-body::-webkit-scrollbar {
+    display: none !important;
+}
+
+.edu-sidebar-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 10px 0 24px !important;
+    gap: 6px !important;
+}
+
+/* Individual Navigation Row */
+.edu-nav-item {
+    position: relative !important;
+    width: 100% !important;
+}
+
+.edu-nav-link {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 52px !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+}
+
+/* Left Rail Icon Box (72px) */
+.edu-nav-icon-wrap {
+    width: 72px !important;
+    height: 52px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.edu-nav-icon {
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 13px !important;
+    color: #ffffff !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.edu-nav-icon svg {
+    display: block !important;
+}
+
+/* Inactive Icon Hover State on Rail */
+.edu-nav-item:not(.active):hover .edu-nav-icon {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    transform: scale(1.04) !important;
+}
+
+/* Active Icon Squircle on Orange Rail (Matches Courses row in screenshot!) */
+.edu-nav-item.active .edu-nav-icon {
+    background: #ffffff !important;
+    color: #eb6226 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14) !important;
+    transform: scale(1.02) !important;
+}
+
+/* Right Menu Label Panel (200px) */
+.edu-nav-label-wrap {
+    flex: 1 !important;
+    padding: 0 16px 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-width: 0 !important;
+}
+
+.edu-nav-label-pill {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    transition: all 0.18s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    border-radius: 12px !important;
+    padding: 9px 14px !important;
+}
+
+/* Inactive Item Hover on White Panel */
+.edu-nav-item:not(.active):hover .edu-nav-label-pill {
+    color: #eb6226 !important;
+    transform: translateX(4px) !important;
+    font-weight: 600 !important;
+}
+
+/* Active Pill on White Panel (Matches Courses row in screenshot!) */
+.edu-nav-item.active .edu-nav-label-pill {
+    background: #eb6226 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    padding: 9px 18px !important;
+    box-shadow: 0 4px 14px rgba(235, 98, 38, 0.32) !important;
+    transform: none !important;
+}
+
+/* Subtle chevron indicator */
+.edu-nav-sub-indicator {
+    color: #94a3b8 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.18s ease, color 0.18s ease !important;
+    margin-left: 6px !important;
+    opacity: 0.65 !important;
+}
+
+.edu-nav-item:hover .edu-nav-sub-indicator {
+    color: #eb6226 !important;
+    transform: translateX(2px) !important;
+    opacity: 1 !important;
+}
+
+.edu-nav-item.active .edu-nav-sub-indicator {
+    color: #eb6226 !important;
+    opacity: 1 !important;
+}
+
+/* Submenu Floating Popover */
+.edu-nav-subflyout {
+    position: absolute !important;
+    left: calc(100% + 4px) !important;
+    top: 2px !important;
+    min-width: 230px !important;
+    background: #ffffff !important;
+    border-radius: 14px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+    padding: 8px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateX(-6px) !important;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease !important;
+    pointer-events: none !important;
+    z-index: 1050 !important;
+}
+
+.edu-nav-item:hover .edu-nav-subflyout {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+}
+
+.edu-subflyout-header {
+    padding: 8px 12px 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.08em !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    margin-bottom: 4px !important;
+}
+
+.edu-subflyout-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+}
+
+.edu-subflyout-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    color: #334155 !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+}
+
+.edu-subflyout-bullet {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #cbd5e1 !important;
+    transition: all 0.15s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.edu-subflyout-link:hover {
+    background: #fef0ea !important;
+    color: #eb6226 !important;
+    font-weight: 600 !important;
+    transform: translateX(2px) !important;
+}
+
+.edu-subflyout-link:hover .edu-subflyout-bullet {
+    background: #eb6226 !important;
+    transform: scale(1.4) !important;
+}
+
+.edu-subflyout-link.active {
+    background: #fef0ea !important;
+    color: #eb6226 !important;
+    font-weight: 600 !important;
+}
+
+.edu-subflyout-link.active .edu-subflyout-bullet {
+    background: #eb6226 !important;
+}
+
+/* ==========================================================================
+   DESKTOP COLLAPSED RAIL MODE (72PX ONLY)
+   ========================================================================== */
+html.sidebar-collapsed .app-sidebar.edu-sidebar,
+body.sidebar-collapsed .app-sidebar.edu-sidebar {
+    width: 72px !important;
+    background: #eb6226 !important;
+    border-right-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.sidebar-collapsed .app-main,
+body.sidebar-collapsed .app-main {
+    margin-left: 72px !important;
+    width: calc(100% - 72px) !important;
+}
+
+html.sidebar-collapsed .edu-sidebar-header {
+    width: 72px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+html.sidebar-collapsed .edu-sidebar-logo-box {
+    width: 72px !important;
+    border-right: none !important;
+}
+
+html.sidebar-collapsed .edu-sidebar-banner,
+html.sidebar-collapsed .edu-nav-label-wrap {
+    display: none !important;
+}
+
+html.sidebar-collapsed .edu-sidebar-toggle-btn .collapse-icon-expand {
+    display: none !important;
+}
+
+html.sidebar-collapsed .edu-sidebar-toggle-btn .collapse-icon-collapsed {
+    display: flex !important;
+}
+
+/* Floating Tooltip in Collapsed Rail Mode */
+html.sidebar-collapsed .app-sidebar .edu-nav-link {
+    position: relative !important;
+}
+
+html.sidebar-collapsed .app-sidebar .edu-nav-item:not(.has-sub) .edu-nav-link:hover::after {
+    content: attr(data-tooltip) !important;
+    position: absolute !important;
+    left: calc(100% + 10px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: #1e293b !important;
+    color: #ffffff !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    z-index: 1100 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+    pointer-events: none !important;
+    line-height: 1.4 !important;
+    animation: tooltipFadeIn 0.15s ease forwards !important;
+}
+
+html.sidebar-collapsed .app-sidebar .edu-nav-item:not(.has-sub) .edu-nav-link:hover::before {
+    content: '' !important;
+    position: absolute !important;
+    left: calc(100% + 4px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border-width: 5px !important;
+    border-style: solid !important;
+    border-color: transparent #1e293b transparent transparent !important;
+    z-index: 1100 !important;
+}
+
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+/* Subflyout in collapsed rail */
+html.sidebar-collapsed .edu-nav-subflyout {
+    left: calc(100% + 8px) !important;
+    top: 0 !important;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS (<= 1024PX)
+   ========================================================================== */
+@media (max-width: 1024px) {
+    .app-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .app-sidebar.edu-sidebar {
+        transform: translateX(-100%) !important;
+        width: 272px !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    .app-sidebar.edu-sidebar.open {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-close-btn {
+        display: flex !important;
+    }
+
+    .edu-sidebar-toggle-btn {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   DARK THEME REFINEMENTS
+   ========================================================================== */
+[data-theme="dark"] .app-sidebar.edu-sidebar {
+    background: linear-gradient(to right, #eb6226 72px, #0f172a 72px) !important;
+    border-right-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .edu-sidebar-header {
+    background: #0f172a !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .edu-sidebar-logo-box {
+    background: #0f172a !important;
+    border-right-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .edu-nav-label-pill {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .edu-nav-item:not(.active):hover .edu-nav-label-pill {
+    color: #ff7841 !important;
+}
+
+[data-theme="dark"] .edu-nav-subflyout {
+    background: #0f172a !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .edu-subflyout-header {
+    color: #64748b !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .edu-subflyout-link {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .edu-subflyout-link:hover {
+    background: rgba(235, 98, 38, 0.18) !important;
+    color: #ff7841 !important;
+}
+
+[data-theme="dark"] .edu-subflyout-link.active {
+    background: rgba(235, 98, 38, 0.22) !important;
+    color: #ff7841 !important;
+}

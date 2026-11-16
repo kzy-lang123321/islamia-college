@@ -14,6 +14,12 @@ $currentUser = getCurrentUser();
 $userRole = strtolower($currentUser['role'] ?? 'staff');
 
 $reportType = $_GET['type'] ?? 'fees';
+if ($reportType === 'payroll') {
+    requireRole(['admin']);
+} elseif (in_array($reportType, ['expenses', 'loans'], true)) {
+    requireRole(['admin', 'accountant']);
+}
+
 $search     = trim($_GET['search'] ?? '');
 $export     = $_GET['export'] ?? '';
 
@@ -43,6 +49,7 @@ if ($export === 'csv') {
             JOIN students s ON e.student_id = s.id
             JOIN batches b ON e.batch_id = b.id
             JOIN courses c ON b.course_id = c.id
+            WHERE f.is_cancelled = 0
             ORDER BY f.payment_date DESC, f.id DESC
         ");
         while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
@@ -53,8 +60,8 @@ if ($export === 'csv') {
         $stmt = $pdo->query("
             SELECT s.student_reg_no, s.full_name, s.father_name, s.contact_number, c.course_name, b.batch_code,
                    e.total_agreed_fee,
-                   COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id), 0) as paid,
-                   GREATEST(0, e.total_agreed_fee - COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id), 0)) as balance
+                   COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id AND is_cancelled = 0), 0) as paid,
+                   GREATEST(0, e.total_agreed_fee + COALESCE((SELECT SUM(fine_amount) FROM fee_transactions WHERE enrollment_id = e.id AND is_cancelled = 0), 0) - COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id AND is_cancelled = 0), 0)) as balance
             FROM enrollments e
             JOIN students s ON e.student_id = s.id
             JOIN batches b ON e.batch_id = b.id
@@ -157,6 +164,7 @@ require_once __DIR__ . '/../../includes/header.php';
             JOIN students s ON e.student_id = s.id
             JOIN batches b ON e.batch_id = b.id
             JOIN courses c ON b.course_id = c.id
+            WHERE f.is_cancelled = 0
             ORDER BY f.payment_date DESC, f.id DESC
             LIMIT 100
         ")->fetchAll();
@@ -199,8 +207,8 @@ require_once __DIR__ . '/../../includes/header.php';
         $dueData = $pdo->query("
             SELECT s.student_reg_no, s.full_name, s.father_name, s.contact_number, c.course_name, b.batch_code,
                    e.total_agreed_fee,
-                   COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id), 0) as paid,
-                   GREATEST(0, e.total_agreed_fee - COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id), 0)) as balance
+                   COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id AND is_cancelled = 0), 0) as paid,
+                   GREATEST(0, e.total_agreed_fee + COALESCE((SELECT SUM(fine_amount) FROM fee_transactions WHERE enrollment_id = e.id AND is_cancelled = 0), 0) - COALESCE((SELECT SUM(amount_paid) FROM fee_transactions WHERE enrollment_id = e.id AND is_cancelled = 0), 0)) as balance
             FROM enrollments e
             JOIN students s ON e.student_id = s.id
             JOIN batches b ON e.batch_id = b.id

@@ -36,12 +36,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Username and full name are required.";
         } elseif (empty($password)) {
             $error = "Please provide a password or enter a phone number to use as the default password.";
+        } elseif (!in_array($role, ['admin', 'accountant', 'registrar', 'staff'], true)) {
+            $error = 'Invalid role.';
+        } elseif (strlen($password) < 6) {
+            $error = 'Password must be at least 6 characters long.';
         } else {
             $hash = password_hash($password, PASSWORD_BCRYPT);
             try {
                 $stmt = $pdo->prepare("
-                    INSERT INTO users (username, email, phone, password_hash, full_name, role, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?, 1)
+                    INSERT INTO users (username, email, phone, password_hash, full_name, role, is_active, must_change_password)
+                    VALUES (?, ?, ?, ?, ?, ?, 1, 1)
                 ");
                 $stmt->execute([$username, !empty($email) ? $email : null, !empty($phone) ? $phone : null, $hash, $fullName, $role]);
                 $message = "User '{$username}' created successfully. Default password is set to: " . htmlspecialchars($password);
@@ -67,15 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = "User does not have a phone number registered to reset to.";
                 } else {
                     $hash = password_hash($targetUser['phone'], PASSWORD_BCRYPT);
-                    $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+                    $stmt = $pdo->prepare("UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?");
                     $stmt->execute([$hash, $id]);
                     $message = "Password successfully reset to default phone number: " . htmlspecialchars($targetUser['phone']);
                 }
-            } elseif (strlen($newPass) < 4) {
-                $error = "Password must be at least 4 characters long.";
+            } elseif (strlen($newPass) < 6) {
+                $error = "Password must be at least 6 characters long.";
             } else {
                 $hash = password_hash($newPass, PASSWORD_BCRYPT);
-                $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?");
                 $stmt->execute([$hash, $id]);
                 $message = "Password updated securely.";
             }

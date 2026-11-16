@@ -1,9 +1,17 @@
 ﻿<?php
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../includes/auth.php";
+if (!empty($_SESSION['user_id']) && !empty($_SESSION['must_change_password'])) {
+    jsonResponse(['error' => 'Please change your initial password before continuing.'], 403);
+}
+
 header("Content-Type: application/json");
 if (empty($_SESSION["user_id"])) { http_response_code(401); echo json_encode(["success"=>false,"error"=>"Unauthorized"]); exit; }
 if (!hasRole(["admin"])) { http_response_code(403); echo json_encode(["success"=>false,"error"=>"Forbidden"]); exit; }
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Allow: POST');
+    jsonResponse(['error' => 'Method not allowed'], 405);
+}
 validateCsrfRequest();
 $staffId = (int)($_POST["staff_id"] ?? 0);
 if ($staffId <= 0) { echo json_encode(["success"=>false,"error"=>"Invalid staff ID."]); exit; }

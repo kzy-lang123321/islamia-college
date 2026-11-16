@@ -87,7 +87,7 @@ $totalPaid = (float)array_sum(array_column($feeTransactions, 'amount_paid'));
 $totalDues = max(0.0, $totalAgreed - $totalPaid);
 ?>
 
-<div class="page-header">
+<div class="page-header no-print">
     <div>
         <div class="page-breadcrumb">
             <a href="index.php" style="color: var(--primary-light); text-decoration: none;">Students</a> • 
@@ -97,9 +97,20 @@ $totalDues = max(0.0, $totalAgreed - $totalPaid);
     </div>
     <div style="display: flex; gap: 10px;">
         <a href="index.php" class="btn btn-glass">← Back to Directory</a>
-        <button type="button" class="btn btn-primary" onclick="window.print()">Print Profile</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Profile</button>
     </div>
 </div>
+
+<?php
+renderPrintHeader('Student Profile & Academic Record', 'Registration No: ' . $student['student_reg_no'] . ' • Student: ' . $student['full_name'], [
+    'Registration #' => $student['student_reg_no'],
+    'Full Name' => $student['full_name'],
+    'Father Name' => $student['father_name'] ?: 'N/A',
+    'Contact' => $student['contact_number'] ?: 'N/A',
+    'CNIC' => $student['cnic'] ?: 'N/A',
+    'Admitted' => date('d M Y', strtotime($student['created_at']))
+]);
+?>
 
 <!-- Profile Banner Card -->
 <div class="glass-card" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
@@ -214,8 +225,10 @@ $totalDues = max(0.0, $totalAgreed - $totalPaid);
                     <thead>
                         <tr>
                             <th>Program / Course</th>
-                            <th>Batch Code</th>
                             <th>Category</th>
+                            <th>Academic Session</th>
+                            <th>Class / Level</th>
+                            <th>Batch Code</th>
                             <th>Duration</th>
                             <th>Enrollment Date</th>
                             <th>Agreed Fee</th>
@@ -224,18 +237,30 @@ $totalDues = max(0.0, $totalAgreed - $totalPaid);
                     </thead>
                     <tbody>
                         <?php if (empty($enrollments)): ?>
-                            <tr><td colspan="7" class="empty-state">No enrollments recorded.</td></tr>
+                            <tr><td colspan="9" class="empty-state">No enrollments recorded for this student.</td></tr>
                         <?php else: ?>
                             <?php foreach ($enrollments as $en): ?>
                                 <tr>
-                                    <td><strong><?= htmlspecialchars($en['course_name']) ?></strong></td>
-                                    <td><span style="padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); font-size: 12px;"><?= htmlspecialchars($en['batch_code']) ?></span></td>
-                                    <td><?= htmlspecialchars($en['category']) ?></td>
+                                    <td>
+                                        <strong style="color: var(--primary-light);"><?= htmlspecialchars($en['course_name']) ?></strong>
+                                        <?php if (!empty($en['roll_number'])): ?>
+                                            <div style="font-size: 11.5px; color: var(--text-muted);">Roll No: <strong style="color: #f8fafc;"><?= htmlspecialchars($en['roll_number']) ?></strong></div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><span style="font-size: 12px; color: var(--text-secondary);"><?= htmlspecialchars($en['category']) ?></span></td>
+                                    <td><span style="font-size: 12px; color: #7dd3fc; font-weight: 500;"><?= htmlspecialchars($en['academic_session'] ?: 'Session 2026-2027') ?></span></td>
+                                    <td><?= htmlspecialchars($en['class_level'] ?: ($en['tuition_class'] ?: '—')) ?></td>
+                                    <td><span style="padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); font-size: 12px; font-family: monospace;"><?= htmlspecialchars($en['batch_code']) ?></span></td>
                                     <td><?= htmlspecialchars($en['duration'] ?: '—') ?></td>
                                     <td><?= $en['enrollment_date'] ? date('M d, Y', strtotime($en['enrollment_date'])) : '—' ?></td>
-                                    <td><strong>Rs. <?= number_format((float)$en['total_agreed_fee'], 0) ?></strong></td>
                                     <td>
-                                        <span class="status-badge <?= $en['status'] === 'active' ? 'badge-active' : 'badge-inactive' ?>">
+                                        <strong>Rs. <?= number_format((float)$en['total_agreed_fee'], 0) ?></strong>
+                                        <?php if ((float)$en['admission_fee'] > 0): ?>
+                                            <div style="font-size: 10.5px; color: var(--text-dim);">Adm: Rs. <?= number_format((float)$en['admission_fee'], 0) ?></div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge badge-<?= htmlspecialchars(strtolower($en['status'])) ?>">
                                             <?= ucfirst(htmlspecialchars($en['status'])) ?>
                                         </span>
                                     </td>
@@ -372,4 +397,7 @@ $totalDues = max(0.0, $totalAgreed - $totalPaid);
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+<?php
+renderPrintSignatures(['Prepared By (Registrar)', 'Accounts Officer', 'Principal / Director ICT']);
+require_once __DIR__ . '/../../includes/footer.php'; 
+?>

@@ -6,6 +6,10 @@
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../includes/auth.php";
 
+if (!empty($_SESSION['user_id']) && !empty($_SESSION['must_change_password'])) {
+    jsonResponse(['error' => 'Please change your initial password before continuing.'], 403);
+}
+
 header("Content-Type: application/json");
 
 if (empty($_SESSION["user_id"])) {
@@ -19,6 +23,10 @@ if (!hasRole(["admin"])) {
     exit;
 }
 
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Allow: POST');
+    jsonResponse(['error' => 'Method not allowed'], 405);
+}
 validateCsrfRequest();
 
 $staffId = (int)($_POST["staff_id"] ?? 0);
